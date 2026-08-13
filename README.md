@@ -15,6 +15,21 @@
 | CheckerAgent | 跨章节交叉审查，检测数据/参数/逻辑冲突 |
 | WriterAgent | 最终统稿润色，生成 Markdown 申请书 |
 
+### 消息调度
+
+所有消息进入一个全局**优先级队列**，由固定数量（`config.json` 的 `max_threads`，默认 8）的 worker 线程并发处理：
+
+- 优先级高的消息先出队（`HIGH` → `NORMAL` → `LOW`），同优先级按入队顺序先入先出
+- 处理中产生的子消息也会进入队列，`wait_all` 会等待全部消息链处理完成
+
+| 消息 | 默认优先级 |
+|---|---|
+| CONFLICT（冲突通知） | HIGH |
+| QUERY（意见征集） | HIGH |
+| REVISION 修订任务 | HIGH（分发时指定） |
+| TASK_ASSIGN / RESULT | NORMAL |
+| ACK | LOW |
+
 ### 工作流程
 
 1. **任务分解**：Coordinator 调用 LLM 将研究主题分解为各正文 Agent 的撰写任务
@@ -63,9 +78,16 @@ pip install -r requirements.txt
 {
     "api_key": "sk-你的DeepSeek密钥",
     "research_topic": "研究方向主题",
-    "max_check_round": 1
+    "max_check_round": 1,
+    "max_threads": 8
 }
 ```
+
+配置项说明：
+- `api_key` —— DeepSeek API 密钥
+- `research_topic` —— 研究主题（申请书题目）
+- `max_check_round` —— 冲突协商最大轮数
+- `max_threads` —— 消息并发处理 worker 线程数
 
 2. 一键运行：
 

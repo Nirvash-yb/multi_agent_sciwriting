@@ -253,7 +253,8 @@ class CoordinatorAgent(BaseAgent):
                 {
                     "type": "REVISION",
                     "task": task
-                }
+                },
+                priority=HIGH
             )
             print(
                 f"[CoordinatorAgent] "

@@ -34,6 +34,9 @@ class CommunicationLogger:
             "message_type":
             message.message_type,
 
+            "priority":
+            message.priority,
+
             "payload_summary":
             summary
         }
