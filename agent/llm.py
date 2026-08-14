@@ -1,5 +1,6 @@
 import requests
 import datetime
+import time
 from config import CONFIG
 from agent.json_utils import parse_llm_json
 
@@ -10,6 +11,8 @@ class llm:
         self.model = "deepseek-chat"
         self.name = name
         self.logger = None
+        self.max_retries = CONFIG.get("llm_max_retries", 3)
+        self.retry_delay = 1
 
     def chat(self, prompt):
         headers = {
@@ -30,40 +33,65 @@ class llm:
             ]
         }
 
-        response = requests.post(
-            self.base_url,
-            headers=headers,
-            json=data
-        )
+        last_error = None
+        for attempt in range(self.max_retries + 1):
+            try:
+                response = requests.post(
+                    self.base_url,
+                    headers=headers,
+                    json=data
+                )
+                if response.status_code != 200:
+                    raise RuntimeError(
+                        f"HTTP {response.status_code}: {response.text[:200]}"
+                    )
 
-        result = response.json()
+                result = response.json()
 
-        answer = (
-            result["choices"][0]
-            ["message"]
-            ["content"]
-        )
+                answer = (
+                    result["choices"][0]
+                    ["message"]
+                    ["content"]
+                )
+                if not answer:
+                    raise ValueError("LLM返回内容为空")
 
-        # 记录本次调用消耗的token
-        if self.logger:
-            usage = result.get("usage", {})
-            prompt_tokens = usage.get(
-                "prompt_tokens", 0
-            )
-            completion_tokens = usage.get(
-                "completion_tokens", 0
-            )
-            total_tokens = usage.get(
-                "total_tokens", 0
-            )
-            self.logger.record_llm_usage(
-                agent=self.name,
-                prompt_tokens=prompt_tokens,
-                completion_tokens=completion_tokens,
-                total_tokens=total_tokens
-            )
+                # 记录本次调用消耗的token
+                if self.logger:
+                    usage = result.get("usage", {})
+                    prompt_tokens = usage.get(
+                        "prompt_tokens", 0
+                    )
+                    completion_tokens = usage.get(
+                        "completion_tokens", 0
+                    )
+                    total_tokens = usage.get(
+                        "total_tokens", 0
+                    )
+                    self.logger.record_llm_usage(
+                        agent=self.name,
+                        prompt_tokens=prompt_tokens,
+                        completion_tokens=completion_tokens,
+                        total_tokens=total_tokens
+                    )
 
-        return answer
+                return answer
+            except (
+                requests.exceptions.RequestException,
+                ValueError,
+                RuntimeError,
+                KeyError,
+                IndexError,
+            ) as e:
+                last_error = e
+                print(
+                    f"[llm] {self.name} 调用失败 "
+                    f"(第{attempt + 1}/{self.max_retries + 1}次): {e}"
+                )
+                if attempt < self.max_retries:
+                    time.sleep(self.retry_delay)
+
+        raise last_error
 
     def chat_json(self, prompt, fallback=None, validator=None):
         """调用LLM并保证返回合规JSON：提取→校验→失败自动重试一次→兜底fallback。"""

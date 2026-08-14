@@ -8,7 +8,7 @@
 
 | 智能体 | 职责 |
 |---|---|
-| CoordinatorAgent | 任务分解、任务分发、冲突协商调度（状态机 + 线程锁） |
+| CoordinatorAgent | 任务分解、任务分发、冲突协商调度 |
 | LiteratureAgent | 撰写「立项依据」章节 |
 | MethodAgent | 撰写「研究内容」「技术路线」章节 |
 | ExperimentAgent | 撰写「实验方案」「预期成果」章节 |
@@ -34,7 +34,7 @@
 
 1. **任务分解**：Coordinator 调用 LLM 将研究主题分解为各正文 Agent 的撰写任务
 2. **并行撰写**：Literature / Method / Experiment 三个正文 Agent 各自撰写章节
-3. **交叉审查**：Checker 检查跨章节一致性，输出冲突列表（最多 `max_check_round` 个冲突数量）
+3. **交叉审查**：Checker 检查跨章节一致性，输出冲突列表
 4. **冲突协商**：对每个冲突，涉及 Agent 先输出修改意见 → Coordinator 用 LLM 裁决生成修订任务 → 分发各 Agent 修订 → 循环直至无冲突或达到最大轮数
 5. **最终统稿**：Writer 整合五个章节生成 `最终申请书.md`
 6. **分析可视**：生成通信时序图、负载图、消息类型分布、token 消耗图
@@ -44,7 +44,7 @@
 ```
 Agents/
 ├── main.py                     # 一键运行入口
-├── config.json                 # 运行配置（含密钥，已 gitignore）
+├── config.json                 # 运行配置
 ├── config.example.json         # 配置示例
 ├── agent/
 │   ├── baseagent.py            # 消息通信基类（线程化）
@@ -60,9 +60,9 @@ Agents/
 │   ├── logger.py               # 通信日志 / token 统计
 │   └── communicationanalyzer.py # 可视化分析
 ├── prompt/                     # 各 Agent 的提示词模板
-├── result/                     # 各章节生成结果（运行产物）
-├── logs/                       # 通信日志与 token 统计（运行产物）
-└── analysis/                   # 可视化图表（运行产物）
+├── result/                     # 各章节生成结果
+├── logs/                       # 通信日志与 token 统计
+└── analysis/                   # 可视化图表
 ```
 
 ## 安装与运行
@@ -75,10 +75,11 @@ pip install -r requirements.txt
 
 ```json
 {
-    "api_key": "sk-你的DeepSeek密钥",
+    "api_key": "sk-DeepSeek密钥",
     "research_topic": "研究方向主题",
     "max_check_round": 1,
-    "max_threads": 8
+    "max_threads": 8,
+    "llm_max_retries": 3
 }
 ```
 
@@ -87,6 +88,7 @@ pip install -r requirements.txt
 - `research_topic` —— 研究主题（申请书题目）
 - `max_check_round` —— 冲突协商最大轮数
 - `max_threads` —— 消息并发处理 worker 线程数
+- `llm_max_retries` —— LLM 调用失败自动重试次数，默认 3（间隔 1 秒）
 
 2. 一键运行：
 
