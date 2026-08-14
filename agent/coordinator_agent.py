@@ -15,7 +15,7 @@ class CoordinatorAgent(BaseAgent):
         self.task_status = {}
         # 检查轮次
         self.check_round = 0
-        self.max_check_round = CONFIG.get("max_check_round", 1)
+        self.max_check_round = CONFIG.get("max_check_round", 2)
         # 待处理冲突队列
         self.pending_conflicts = []
         # 是否正处于冲突修正阶段
@@ -27,7 +27,8 @@ class CoordinatorAgent(BaseAgent):
         # 各Agent返回的意见
         self.suggestions = {}
         # 等待响应的Agent列表
-        self.awaiting_agents = []
+        self.awaiting_agents_suggestions = []
+        self.awaiting_agents_revisions = []
         # 线程锁，保证状态机串行
         self.lock = threading.Lock()
 
@@ -82,18 +83,18 @@ class CoordinatorAgent(BaseAgent):
             if all(self.task_status.values()):
                 self.notify_checker()
 
-    # 冲突修正阶段的结果处理（仅处理修订稿RESULT）
+    # 冲突修正阶段的结果处理
     def _handle_conflict_result(self, message):
         agent_name = message.sender
 
         if self.phase == "apply_solution":
-            if agent_name in self.awaiting_agents:
-                self.awaiting_agents.remove(agent_name)
-                if not self.awaiting_agents:
+            if agent_name in self.awaiting_agents_revisions:
+                self.awaiting_agents_revisions.remove(agent_name)
+                if not self.awaiting_agents_revisions:
                     # 当前冲突解决，处理下一个
                     self.process_next_conflict()
 
-    # 处理子Agent的QUERY回复（冲突意见征集阶段）
+    # 处理子Agent的QUERY回复
     def handle_query(self, message):
         with self.lock:
             if not self.fixing_conflicts:
@@ -101,13 +102,13 @@ class CoordinatorAgent(BaseAgent):
             if self.phase != "collect_suggestions":
                 return
             agent_name = message.sender
-            if agent_name not in self.awaiting_agents:
+            if agent_name not in self.awaiting_agents_suggestions:
                 return
 
             self.suggestions[agent_name] = message.payload
             if all(
                     name in self.suggestions
-                    for name in self.awaiting_agents
+                    for name in self.awaiting_agents_suggestions
             ):
                 self.dispatch_conflict_tasks()
 
@@ -120,14 +121,10 @@ class CoordinatorAgent(BaseAgent):
                 if isinstance(conflicts, dict)
                 else []
             )
+            self.check_round+=1
 
-            # 无冲突：进入Writer
-            if not conflict_list:
-                self.notify_writer()
-                return
-
-            # 达到最大轮次：停止自动修改，进入Writer
-            if self.check_round >= self.max_check_round:
+            # 无冲突：进入Writer，或者最大轮次
+            if not conflict_list or self.check_round > self.max_check_round:
                 self.notify_writer()
                 return
 
@@ -143,7 +140,9 @@ class CoordinatorAgent(BaseAgent):
             self.current_conflict = None
             self.phase = None
             self.suggestions = {}
-            self.check_round += 1
+            self.awaiting_agents_revisions = []
+            self.awaiting_agents_suggestions = []
+
             if self.check_round < self.max_check_round:
                 self.notify_checker()
             else:
@@ -156,7 +155,7 @@ class CoordinatorAgent(BaseAgent):
         self.suggestions = {}
 
         agents = conflict.get("agents", [])
-        self.awaiting_agents = list(agents)
+        self.awaiting_agents_suggestions = list(agents)
 
         # 分发意见征集任务（仅包含描述、相关章节和相关冲突段）
         request = {
@@ -170,7 +169,7 @@ class CoordinatorAgent(BaseAgent):
                 "related_excerpt", {}
             )
         }
-        for agent_name in self.awaiting_agents:
+        for agent_name in self.awaiting_agents_suggestions:
             agent = self.agents[agent_name]
             self.send_query(agent, request)
 
@@ -196,7 +195,7 @@ class CoordinatorAgent(BaseAgent):
         )
 
         self.phase = "apply_solution"
-        self.awaiting_agents = list(conflict_tasks.keys())
+        self.awaiting_agents_revisions = list(conflict_tasks.keys())
 
         # 像初稿一样分发下去写，只告诉子Agent修改目标
         for agent_name, task in conflict_tasks.items():

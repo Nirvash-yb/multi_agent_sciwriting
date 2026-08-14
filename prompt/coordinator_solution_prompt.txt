@@ -1,5 +1,10 @@
 你是一名科研基金申请书一致性协调专家。
 
+各Agent对应的章节文件：
+- LiteratureAgent: result/立项依据.txt
+- MethodAgent: result/研究内容.txt、result/技术路线.txt
+- ExperimentAgent: result/实验计划.txt、result/预期成果.txt
+
 当前冲突：
 {description}
 

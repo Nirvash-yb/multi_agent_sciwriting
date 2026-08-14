@@ -16,7 +16,6 @@ class BaseAgent:
         self.name = name
         self.message=None
         self.logger=None
-        # 保存其他Agent对象
         self.agents = {}
 
     # 懒启动固定数量的worker线程（首次发消息或wait_all时触发）
@@ -118,7 +117,7 @@ class BaseAgent:
     def send_ack(self, receiver, payload, related_message_id=None, priority=LOW):
         self.send_message(receiver, ACK, payload, priority=priority, related_message_id=related_message_id)
 
-    # 组装消息并发送（入优先级队列，取负值使HIGH先出队；同优先级按seq先进先出）
+    # 组装消息并发送
     def send_message(self, receiver, msg_type, payload, priority=LOW, related_message_id=None):
         message = Message(self.name, receiver.name, msg_type, payload, priority=priority, related_message_id=related_message_id)
 

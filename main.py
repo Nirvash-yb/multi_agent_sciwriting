@@ -5,7 +5,6 @@ from agent.experiment_agent import ExperimentAgent
 from agent.checker_agent import CheckerAgent
 from agent.writer_agent import WriterAgent
 from agent.baseagent import BaseAgent
-from communication.message import *
 from communication.logger import CommunicationLogger
 import os
 from communication.communicationanalyzer import CommunicationAnalyzer
