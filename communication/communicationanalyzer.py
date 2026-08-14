@@ -7,10 +7,6 @@ def load_token_summary(
         summary_path="logs/llm_usage_summary.json"):
 
     if not os.path.exists(summary_path):
-        print(
-            "[CommunicationAnalyzer] "
-            f"未找到token汇总文件: {summary_path}"
-        )
         return None
 
     with open(
@@ -38,11 +34,6 @@ class CommunicationAnalyzer:
             encoding="utf-8"
         ) as f:
             self.logs = json.load(f)
-
-        print(
-            f"[CommunicationAnalyzer] "
-            f"加载 {len(self.logs)} 条通信记录"
-        )
 
         return self.logs
 
@@ -202,11 +193,6 @@ class CommunicationAnalyzer:
 
         plt.close()
 
-        print(
-            "[CommunicationAnalyzer] "
-            f"生成通信序列图: {output_path}"
-        )
-
         return output_path
 
     def analyze_load(self):
@@ -310,11 +296,6 @@ class CommunicationAnalyzer:
 
         plt.close()
 
-        print(
-            f"[CommunicationAnalyzer] "
-            f"生成通信负载图: {output_path}"
-        )
-
         return output_path
 
     def analyze_message_types(self):
@@ -368,11 +349,6 @@ class CommunicationAnalyzer:
         )
 
         plt.close()
-
-        print(
-            f"[CommunicationAnalyzer] "
-            f"生成消息类型分布图: {output_path}"
-        )
 
         return output_path
 
@@ -449,18 +425,9 @@ class CommunicationAnalyzer:
 
         plt.close()
 
-        print(
-            "[CommunicationAnalyzer] "
-            f"生成token消耗柱状图: {output_path}"
-        )
-
         return output_path
 
     def analyze(self):
-        print(
-            "\n========== Communication Analysis =========="
-        )
-
         self.load_logs()
 
         sequence_path = (
@@ -477,10 +444,6 @@ class CommunicationAnalyzer:
 
         token_chart_path = (
             self.generate_token_chart()
-        )
-
-        print(
-            "========== Analysis Complete ==========\n"
         )
 
         return {

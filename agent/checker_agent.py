@@ -1,4 +1,3 @@
-import json
 from agent.baseagent import BaseAgent
 from agent.llm import llm
 
@@ -12,9 +11,6 @@ class CheckerAgent(BaseAgent):
 
     # 收到检查任务后开始交叉审查
     def handle_task_assign(self, message):
-        print(
-            "[CheckerAgent] 开始交叉审查"
-        )
         self.check()
 
     # 读取文件
@@ -73,25 +69,9 @@ class CheckerAgent(BaseAgent):
         )
 
         # 调用LLM
-        response = self.llm.chat(prompt)
-
-        # 解析JSON
-        conflicts = json.loads(response)
-
-        # 保存冲突结果
-        with open(
-            "temp/checker_result.json",
-            "w",
-            encoding="utf-8"
-        ) as f:
-            json.dump(
-                conflicts,
-                f,
-                ensure_ascii=False,
-                indent=4
-            )
-        print(
-            "[CheckerAgent] 交叉审查完成"
+        conflicts = self.llm.chat_json(
+            prompt,
+            fallback={"conflicts": []}
         )
 
         # 发送冲突通知
@@ -100,17 +80,10 @@ class CheckerAgent(BaseAgent):
     # 发送冲突通知
     def send_conflicts(self, conflicts):
         if not conflicts:
-            print(
-                "[CheckerAgent] 未发现冲突"
-            )
             return
 
         coordinator = self.agents.get("CoordinatorAgent")
         self.send_conflict(
             coordinator,
             conflicts
-        )
-        print(
-            "[CheckerAgent] "
-            "冲突通知已发送给 CoordinatorAgent"
         )

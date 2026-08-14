@@ -2,7 +2,7 @@ import json
 import datetime
 
 class CommunicationLogger:
-    def __init__(self, max_summary_len=50):
+    def __init__(self, max_summary_len=1000):
         self.logs=[]
         self.llm_usage=[]
         self.max_summary_len = max_summary_len
@@ -16,7 +16,7 @@ class CommunicationLogger:
             return text
         return text[:max_len] + "..."
 
-    # 记录消息（打印控制台 + 存入self.logs）
+    # 记录消息（存入self.logs）
     def record(self,message):
         summary = self._summarize(
             message.payload
@@ -52,18 +52,13 @@ class CommunicationLogger:
                 ensure_ascii=False
             )
 
-    # 记录一次LLM调用的token消耗
+    # 记录一次LLM调用（含token消耗）
     def record_llm_usage(
             self,
             agent,
-            prompt,
             prompt_tokens,
             completion_tokens,
             total_tokens):
-        summary = self._summarize(
-            prompt,
-            max_len=80
-        )
         entry = {
             "timestamp":
             datetime.datetime.now()
@@ -73,9 +68,6 @@ class CommunicationLogger:
 
             "agent":
             agent,
-
-            "prompt_summary":
-            summary,
 
             "prompt_tokens":
             prompt_tokens,
@@ -87,15 +79,9 @@ class CommunicationLogger:
             total_tokens
         }
         self.llm_usage.append(entry)
-        print(
-            f"[{agent}] LLM调用消耗token: "
-            f"prompt={prompt_tokens}, "
-            f"completion={completion_tokens}, "
-            f"total={total_tokens}"
-        )
 
-    # 保存逐条LLM调用token记录
-    def save_usage(self, path):
+    # 保存逐条LLM调用记录（智能体与LLM通信日志）
+    def save_llm_messages(self, path):
         with open(
             path,
             "w",

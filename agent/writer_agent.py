@@ -11,17 +11,11 @@ class WriterAgent(BaseAgent):
 
     # 收到最终统稿任务
     def handle_task_assign(self, message):
-        print(
-            "[WriterAgent] 开始最终统稿"
-        )
         content = self.load_content()
         result = self.write(content)
         self.save_result(
             result,
             "最终申请书.md"
-        )
-        print(
-            "[WriterAgent] 最终申请书生成完成"
         )
         self.send_result(
             self.agents["CoordinatorAgent"],

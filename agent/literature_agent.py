@@ -1,6 +1,7 @@
 from agent.baseagent import BaseAgent
 from agent.llm import llm
 import os
+import json
 
 class LiteratureAgent(BaseAgent):
 
@@ -9,17 +10,12 @@ class LiteratureAgent(BaseAgent):
         self.llm = llm(name=self.name)
 
     def handle_task_assign(self, message):
-        print(f"{self.name}收到任务:{message.payload}")
-
         task = message.payload
 
         # REVISION类型：带原文重写自己的章节
         if isinstance(task, dict) and task.get("type") == "REVISION":
             revision_task = task.get("task", "")
-            result = self.research(
-                revision_task,
-                original_content=self.load_own_content()
-            )
+            result = self.revise(revision_task)
             self.save_result(result)
             self.send_result(
                 self.agents[message.sender],
@@ -37,18 +33,14 @@ class LiteratureAgent(BaseAgent):
             related_message_id=message.message_id
         )
 
-    # 处理查询：针对冲突输出意见JSON并保存
+    # 处理查询：针对冲突输出意见JSON
     def handle_query(self, message):
         payload = message.payload
         suggestion = self.propose_suggestion(
             payload.get("description", ""),
-            payload.get("related_content", [])
+            payload.get("related_excerpt", {})
         )
-        self.save_suggestion(suggestion)
-        print(
-            f"{self.name}已输出意见JSON"
-        )
-        self.send_result(
+        self.send_query(
             self.agents[message.sender],
             suggestion,
             related_message_id=message.message_id
@@ -72,8 +64,6 @@ class LiteratureAgent(BaseAgent):
         return ""
 
     def research(self, task, original_content=""):
-        print(f"{self.name}开始调用LLM生成正文")
-
         prompt_template = self.load_prompt("prompt/literature_prompt.txt")
         prompt = prompt_template.format(task=task)
 
@@ -88,26 +78,33 @@ class LiteratureAgent(BaseAgent):
         response = self.llm.chat(prompt)
         return response
 
-    # 针对冲突输出意见JSON
-    def propose_suggestion(self, description, related_content):
-        print(f"{self.name}开始输出冲突意见JSON")
+    # 冲突修订：基于原文修改
+    def revise(self, revision_task):
         prompt_template = self.load_prompt(
-            "prompt/agent_suggestion_prompt.txt"
+            "prompt/agent_revision_prompt.txt"
         )
         prompt = prompt_template.format(
-            description=description,
-            related_content=related_content,
-            my_content=self.load_own_content()
+            original_content=self.load_own_content(),
+            revision_task=revision_task
         )
         return self.llm.chat(prompt)
 
-    # 保存意见JSON
-    def save_suggestion(self, suggestion):
-        os.makedirs("temp", exist_ok=True)
-        path = f"temp/{self.name}_suggestion.json"
-        with open(path, "w", encoding="utf-8") as f:
-            f.write(suggestion)
-        print(f"{self.name}意见JSON已保存:{path}")
+    # 针对冲突输出意见JSON
+    def propose_suggestion(self, description, related_excerpt):
+        prompt_template = self.load_prompt(
+            "prompt/agent_suggestion_prompt.txt"
+        )
+        excerpt_text = json.dumps(
+            related_excerpt,
+            ensure_ascii=False,
+            indent=2
+        )
+        prompt = prompt_template.format(
+            description=description,
+            related_excerpt=excerpt_text,
+            my_content=self.load_own_content()
+        )
+        return self.llm.chat(prompt)
 
     def save_result(self, content):
         path = "result"
@@ -119,5 +116,3 @@ class LiteratureAgent(BaseAgent):
 
         with open(filename, "w", encoding="utf-8") as f:
             f.write(content)
-
-        print(f"{self.name}结果已保存:{filename}")

@@ -61,7 +61,6 @@ Agents/
 │   └── communicationanalyzer.py # 可视化分析
 ├── prompt/                     # 各 Agent 的提示词模板
 ├── result/                     # 各章节生成结果（运行产物）
-├── temp/                       # 中间 JSON（运行产物）
 ├── logs/                       # 通信日志与 token 统计（运行产物）
 └── analysis/                   # 可视化图表（运行产物）
 ```
@@ -99,6 +98,7 @@ python main.py
 
 - `最终申请书.md` —— 最终生成的申请书
 - `result/` —— 各正文 Agent 的章节初稿与修订稿
-- `logs/messages.json` —— 全部通信记录
+- `logs/messages.json` —— 智能体间全部通信记录（payload 摘要）
+- `logs/llm_messages.json` —— 各 Agent 的 LLM 调用记录（含 token 消耗）
 - `logs/llm_usage_summary.json` —— 各 Agent token 消耗汇总
 - `analysis/*.png` —— 通信时序、负载、消息类型、token 消耗可视化

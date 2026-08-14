@@ -1,29 +1,22 @@
 你是一名科研基金申请书一致性修订专家。
 
-跨章节一致性审查发现了一个冲突，你的章节内容可能与其它章节在该冲突点上不一致。
+你的章节内容：
+{my_content}
+
+其他章节中的冲突段落：
+{related_excerpt}
 
 冲突描述：
 {description}
 
-涉及的相关章节：
-{related_content}
+请针对该冲突，基于你自己的章节内容给出解决方案。
 
-你当前的章节内容：
-{my_content}
-
-请结合你的章节内容，针对该冲突输出一条意见JSON。
-
-意见JSON格式：
-
+输出JSON格式：
 {{
-    "agent": "你的Agent名称",
-    "should_modify": true,
-    "modification_detail": "你的章节具体需要如何修改、改成什么（若无需修改填空字符串）",
-    "reason": "给出该意见的理由"
+    "solution": "你的章节需要具体如何修改（旧内容→新内容）",
+    "reason": "给出该方案的理由"
 }}
 
 要求：
-1. should_modify为布尔值，说明你的章节是否需要修改。
-2. 若该冲突与你的章节无关，should_modify置为false，modification_detail留空。
-3. 意见必须具体、可执行，便于协调者据此分派修订任务。
-4. 只输出JSON，不要输出其他内容。
+1. 只输出JSON，不要输出其他内容。
+2. solution 必须具体、可执行，便于协调者据此分派修订任务。

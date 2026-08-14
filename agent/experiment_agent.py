@@ -1,6 +1,7 @@
 from agent.baseagent import BaseAgent
 from agent.llm import llm
 import os
+import json
 
 class ExperimentAgent(BaseAgent):
     def __init__(self):
@@ -16,10 +17,7 @@ class ExperimentAgent(BaseAgent):
         # REVISION类型：带原文重写自己的章节
         if isinstance(task, dict) and task.get("type") == "REVISION":
             revision_task = task.get("task", "")
-            result = self.experiment(
-                revision_task,
-                original_content=self.load_own_content()
-            )
+            result = self.revise(revision_task)
             self.save_result(result)
             self.send_result(
                 self.agents[message.sender],
@@ -40,18 +38,14 @@ class ExperimentAgent(BaseAgent):
             related_message_id=message.message_id
         )
 
-    # 处理查询：针对冲突输出意见JSON并保存
+    # 处理查询：针对冲突输出意见JSON
     def handle_query(self, message):
         payload = message.payload
         suggestion = self.propose_suggestion(
             payload.get("description", ""),
-            payload.get("related_content", [])
+            payload.get("related_excerpt", {})
         )
-        self.save_suggestion(suggestion)
-        print(
-            "[ExperimentAgent]已输出意见JSON"
-        )
-        self.send_result(
+        self.send_query(
             self.agents[message.sender],
             suggestion,
             related_message_id=message.message_id
@@ -59,9 +53,6 @@ class ExperimentAgent(BaseAgent):
 
     # 实验设计总入口
     def experiment(self, task, original_content=""):
-        print(
-            "ExperimentAgent开始设计实验方案"
-        )
         experiment_plan = self.generate_experiment_plan(
             task,
             original_content
@@ -135,28 +126,53 @@ class ExperimentAgent(BaseAgent):
 
         return response
 
-    # 针对冲突输出意见JSON
-    def propose_suggestion(self, description, related_content):
-        print(
-            "[ExperimentAgent]开始输出冲突意见JSON"
-        )
+    # 冲突修订：每个章节文件单独基于原文修改
+    def revise(self, revision_task):
+        return {
+            "experiment_plan":
+                self.revise_file(
+                    "result/实验计划.txt",
+                    revision_task
+                ),
+
+            "expected_results":
+                self.revise_file(
+                    "result/预期成果.txt",
+                    revision_task
+                )
+        }
+
+    # 单个章节文件的修订
+    def revise_file(self, path, revision_task):
+        original = ""
+        if os.path.exists(path):
+            with open(path, "r", encoding="utf-8") as f:
+                original = f.read()
         prompt_template = self.load_prompt(
-            "prompt/agent_suggestion_prompt.txt"
+            "prompt/agent_revision_prompt.txt"
         )
         prompt = prompt_template.format(
-            description=description,
-            related_content=related_content,
-            my_content=self.load_own_content()
+            original_content=original,
+            revision_task=revision_task
         )
         return self.llm.chat(prompt)
 
-    # 保存意见JSON
-    def save_suggestion(self, suggestion):
-        os.makedirs("temp", exist_ok=True)
-        path = f"temp/{self.name}_suggestion.json"
-        with open(path, "w", encoding="utf-8") as f:
-            f.write(suggestion)
-        print(f"[ExperimentAgent]意见JSON已保存:{path}")
+    # 针对冲突输出意见JSON
+    def propose_suggestion(self, description, related_excerpt):
+        prompt_template = self.load_prompt(
+            "prompt/agent_suggestion_prompt.txt"
+        )
+        excerpt_text = json.dumps(
+            related_excerpt,
+            ensure_ascii=False,
+            indent=2
+        )
+        prompt = prompt_template.format(
+            description=description,
+            related_excerpt=excerpt_text,
+            my_content=self.load_own_content()
+        )
+        return self.llm.chat(prompt)
 
     # 保存结果
     def save_result(self, result):
@@ -181,6 +197,3 @@ class ExperimentAgent(BaseAgent):
             f.write(
                 result["expected_results"]
             )
-        print(
-            "ExperimentAgent结果保存完成"
-        )

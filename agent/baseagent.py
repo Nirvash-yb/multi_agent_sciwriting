@@ -65,11 +65,9 @@ class BaseAgent:
     # 注册Agent
     def register_agent(self, agent):
         self.agents[agent.name] = agent
-        print(f"{self.name}注册Agent: {agent.name}")
 
-#接受消息
+    #接受消息
     def receive_message(self, message):
-        print(f"[{self.name}] 收到消息")
         if message.message_type != ACK:
             self.send_ack(
                 self.agents[message.sender],
@@ -123,9 +121,6 @@ class BaseAgent:
     # 组装消息并发送（入优先级队列，取负值使HIGH先出队；同优先级按seq先进先出）
     def send_message(self, receiver, msg_type, payload, priority=LOW, related_message_id=None):
         message = Message(self.name, receiver.name, msg_type, payload, priority=priority, related_message_id=related_message_id)
-        print(
-            f"[{self.name}] 发送消息给 [{message.receiver}]"
-        )
 
         if self.logger:
             self.logger.record(message)
