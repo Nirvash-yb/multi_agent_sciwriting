@@ -34,27 +34,33 @@ class CheckerAgent(BaseAgent):
     # 交叉审查
     def check(self):
         files = {
-            "LiteratureAgent": [
+            "literature_basis": [
                 "result/立项依据.txt"
             ],
 
-            "MethodAgent": [
-                "result/研究内容.txt",
+            "research_content": [
+                "result/研究内容.txt"
+            ],
+
+            "technical_route": [
                 "result/技术路线.txt"
             ],
 
-            "ExperimentAgent": [
-                "result/实验计划.txt",
+            "experiment_plan": [
+                "result/实验计划.txt"
+            ],
+
+            "expected_results": [
                 "result/预期成果.txt"
             ]
         }
         content = {}
 
         # 读取所有Agent生成的正文
-        for agent_name, paths in files.items():
-            content[agent_name] = ""
+        for chapter_name, paths in files.items():
+            content[chapter_name] = ""
             for path in paths:
-                content[agent_name] += (
+                content[chapter_name] += (
                     self.load_content(path)
                     + "\n"
                 )

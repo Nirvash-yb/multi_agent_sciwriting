@@ -43,9 +43,7 @@ BaseAgent.wait_all()
 
 os.makedirs("logs", exist_ok=True)
 logger.save("logs/messages.json")
-logger.save_llm_messages("logs/llm_messages.json")
 logger.save_usage_summary("logs/llm_usage_summary.json")
-
 
 analyzer = CommunicationAnalyzer(
     log_path="logs/messages.json"

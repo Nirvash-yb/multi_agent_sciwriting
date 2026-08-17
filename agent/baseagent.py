@@ -18,7 +18,7 @@ class BaseAgent:
         self.logger=None
         self.agents = {}
 
-    # 懒启动固定数量的worker线程（首次发消息或wait_all时触发）
+    # 懒启动固定数量的worker线程
     @classmethod
     def _ensure_workers(cls):
         base = BaseAgent
@@ -50,7 +50,7 @@ class BaseAgent:
             finally:
                 base._queue.task_done()
 
-    # 等待所有消息处理完成（含处理过程中入队的新消息），随后停止worker
+    # 等待所有消息处理完成，随后停止worker
     @classmethod
     def wait_all(cls):
         base = BaseAgent
@@ -68,6 +68,10 @@ class BaseAgent:
     #接受消息
     def receive_message(self, message):
         if message.message_type != ACK:
+            print(
+                f"[{self.name}] 收到来自 {message.sender} 的消息: "
+                f"{message.message_type} (id={message.message_id[:8]})"
+            )
             self.send_ack(
                 self.agents[message.sender],
                 f"{self.name}确认收到",
@@ -121,8 +125,7 @@ class BaseAgent:
     def send_message(self, receiver, msg_type, payload, priority=LOW, related_message_id=None):
         message = Message(self.name, receiver.name, msg_type, payload, priority=priority, related_message_id=related_message_id)
 
-        if self.logger:
-            self.logger.record(message)
+        self.logger.record(message)
 
         self._ensure_workers()
         self._queue.put(

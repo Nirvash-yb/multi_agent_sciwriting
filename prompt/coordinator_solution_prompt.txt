@@ -1,9 +1,9 @@
 你是一名科研基金申请书一致性协调专家。
 
-各Agent对应的章节文件：
-- LiteratureAgent: result/立项依据.txt
-- MethodAgent: result/研究内容.txt、result/技术路线.txt
-- ExperimentAgent: result/实验计划.txt、result/预期成果.txt
+各Agent对应的章节文件与chapter字段：
+- LiteratureAgent: chapter 固定为 literature_basis，对应 result/立项依据.txt
+- MethodAgent: chapter 可选 research_content（result/研究内容.txt）或 technical_route（result/技术路线.txt）
+- ExperimentAgent: chapter 可选 experiment_plan（result/实验计划.txt）或 expected_results（result/预期成果.txt）
 
 当前冲突：
 {description}
@@ -22,12 +22,19 @@
 要求：
 1. JSON的key必须是Agent名称，只能使用上述参与冲突的Agent。
 2. 禁止使用文件名、文件路径或章节名称作为key。
-3. 每个任务必须明确“修改什么、改成什么”，使Agent可以直接执行。
-4. 确保相关章节的数据、参数和逻辑保持一致。
-5. 只输出JSON，不要输出其他内容。
+3. 每个修订任务必须包含chapter字段，指明该Agent需要修改的具体章节；chapter必须是该Agent负责章节中与冲突直接相关的那一个。
+4. 每个任务必须明确“修改什么、改成什么”，使Agent可以直接执行。
+5. 确保相关章节的数据、参数和逻辑保持一致。
+6. 只输出JSON，不要输出其他内容。
 
 格式：
 {{
-    "MethodAgent": "具体修改任务",
-    "ExperimentAgent": "具体修改任务"
+    "MethodAgent": {{
+        "chapter": "research_content",
+        "task": "具体修改任务"
+    }},
+    "ExperimentAgent": {{
+        "chapter": "experiment_plan",
+        "task": "具体修改任务"
+    }}
 }}

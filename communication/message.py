@@ -1,6 +1,6 @@
 import uuid
 import datetime
-#self.api_key = "sk-25460bfc0d4f4034af3ededa365ae942"
+
 #优先级
 HIGH=3
 NORMAL=2

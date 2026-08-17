@@ -16,7 +16,7 @@ class CommunicationLogger:
             return text
         return text[:max_len] + "..."
 
-    # 记录消息（存入self.logs）
+    # 记录消息
     def record(self,message):
         summary = self._summarize(
             message.payload
@@ -79,20 +79,6 @@ class CommunicationLogger:
             total_tokens
         }
         self.llm_usage.append(entry)
-
-    # 保存逐条LLM调用记录（智能体与LLM通信日志）
-    def save_llm_messages(self, path):
-        with open(
-            path,
-            "w",
-            encoding="utf-8"
-        ) as f:
-            json.dump(
-                self.llm_usage,
-                f,
-                indent=4,
-                ensure_ascii=False
-            )
 
     # 按Agent汇总token消耗并保存
     def save_usage_summary(self, path):

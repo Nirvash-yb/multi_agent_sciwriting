@@ -1,22 +1,36 @@
 你是一名科研基金申请书一致性修订专家。
 
+各Agent对应的章节tag：
+- LiteratureAgent: literature_basis
+- MethodAgent: research_content, technical_route
+- ExperimentAgent: experiment_plan, expected_results
+
+你是{name}
+
 你的章节内容：
 {my_content}
 
-其他章节中的冲突段落：
+各章节中的冲突内容：
 {related_excerpt}
 
 冲突描述：
 {description}
 
-请针对该冲突，基于你自己的章节内容给出解决方案。
+请针对该冲突，基于你负责的章节内容给出解决方案。
+
+你只能修改“你本次需要重点处理的章节”中的内容，不得修改其他章节。
 
 输出JSON格式：
 {{
+    "chapter": "你要修改的章节tag",
     "solution": "你的章节需要具体如何修改（旧内容→新内容）",
     "reason": "给出该方案的理由"
 }}
 
 要求：
 1. 只输出JSON，不要输出其他内容。
-2. solution 必须具体、可执行，便于协调者据此分派修订任务。
+2. chapter必须从你本次需要重点处理的章节中选择。
+3. solution必须具体、可执行，明确指出需要修改的内容。
+4. solution应尽量采用“旧内容→新内容”的形式。
+5. 不要提出修改其他Agent负责章节的建议。
+6. 如果你的章节无需修改，chapter填写你本次负责的章节，并在solution中说明无需修改。

@@ -197,15 +197,21 @@ class CoordinatorAgent(BaseAgent):
         self.phase = "apply_solution"
         self.awaiting_agents_revisions = list(conflict_tasks.keys())
 
-        # 像初稿一样分发下去写，只告诉子Agent修改目标
         for agent_name, task in conflict_tasks.items():
             agent = self.agents[agent_name]
+            revision_text = task
+            chapter=None
+            if isinstance(task, dict):
+                chapter = task.get("chapter")
+                revision_text = task.get("task", "")
+            payload = {
+                "type": "REVISION",
+                "chapter":chapter,
+                "task": revision_text
+            }
             self.send_task_assign(
                 agent,
-                {
-                    "type": "REVISION",
-                    "task": task
-                },
+                payload,
                 priority=HIGH
             )
 

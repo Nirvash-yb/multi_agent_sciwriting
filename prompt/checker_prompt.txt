@@ -2,10 +2,10 @@
 
 重点检查不同章节之间是否存在数据、参数、实验条件、技术路线和结论上的不一致。
 
-各Agent对应的章节文件：
-- LiteratureAgent: result/立项依据.txt
-- MethodAgent: result/研究内容.txt、result/技术路线.txt
-- ExperimentAgent: result/实验计划.txt、result/预期成果.txt
+各Agent对应的章节tag：
+- LiteratureAgent: literature_basis
+- MethodAgent: research_content,technical_route
+- ExperimentAgent: experiment_plan、expected_results
 
 重点检查：
 
@@ -34,10 +34,10 @@
 9不要主动评价研究方案是否科学合理，只判断不同章节之间是否能够逻辑对应。
 
 每个冲突必须且只能包含以下四个字段：
-- agents：冲突涉及的相关Agent名称列表（来自上面的章节文件对照表）
+- agents：必须根据 related_content 对应的章节归属确定，不得出现未参与该冲突章节的 Agent。
 - description：冲突描述（说明具体哪里不一致）
-- related_content：冲突涉及的相关章节文件名列表
-- related_excerpt：相关章节冲突段，键为章节文件名，值为该文件与冲突直接相关的原文摘录（必须引用原章原文，不得改写）
+- related_content：冲突涉及的相关章节tag
+- related_excerpt：相关章节冲突段，键为章节tag，值为该章节与冲突直接相关的原文摘录（必须引用原章原文，不得改写）
 
 例如：
 {{
@@ -49,12 +49,12 @@
             ],
             "description": "方法部分要求8张GPU，但实验方案只配置4张GPU。",
             "related_content": [
-                "result/技术路线.txt",
-                "result/实验计划.txt"
+                "technical_route",
+                "experiment_plan"
             ],
             "related_excerpt": {{
-                "result/技术路线.txt": "……算法训练需配置8张NVIDIA A100 GPU……",
-                "result/实验计划.txt": "……实验在配备4张NVIDIA A100 GPU的服务器上进行……"
+                "technical_route": "……算法训练需配置8张NVIDIA A100 GPU……",
+                "experiment_plan": "……实验在配备4张NVIDIA A100 GPU的服务器上进行……"
             }}
         }}
     ]
@@ -66,7 +66,7 @@
     "conflicts": []
 }}
 
-只输出JSON，不要输出其他内容，最多输出5个冲突。
+只输出JSON，不要输出其他内容，最多输出4个冲突。
 
 以下是需要审查的多个Agent生成的研究方案：
 

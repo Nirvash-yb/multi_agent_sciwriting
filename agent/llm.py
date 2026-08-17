@@ -8,8 +8,8 @@ class llm:
     def __init__(self, name="unknown"):
         self.api_key = CONFIG.get("api_key", "")
         self.base_url = "https://api.deepseek.com/chat/completions"
-        self.model = "deepseek-chat"
         self.name = name
+        self.model = "deepseek-v4-flash"
         self.logger = None
         self.max_retries = CONFIG.get("llm_max_retries", 3)
         self.retry_delay = 1
@@ -94,7 +94,6 @@ class llm:
         raise last_error
 
     def chat_json(self, prompt, fallback=None, validator=None):
-        """调用LLM并保证返回合规JSON：提取→校验→失败自动重试一次→兜底fallback。"""
         repair_prompt = (
             prompt
             + "\n\n注意：你上次的输出不是合法JSON，或不符合要求的JSON结构。"

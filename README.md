@@ -90,6 +90,8 @@ pip install -r requirements.txt
 - `max_threads` —— 消息并发处理 worker 线程数
 - `llm_max_retries` —— LLM 调用失败自动重试次数，默认 3（间隔 1 秒）
 
+所有智能体统一使用 `deepseek-v4-flash` 模型。
+
 2. 一键运行：
 
 ```bash
