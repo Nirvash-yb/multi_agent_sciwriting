@@ -29,17 +29,8 @@ class CoordinatorAgent(BaseAgent):
         # 等待响应的Agent列表
         self.awaiting_agents_suggestions = []
         self.awaiting_agents_revisions = []
-        # 线程锁，保证状态机串行
+        # 线程锁
         self.lock = threading.Lock()
-
-    # 加载prompt
-    def load_prompt(self, path):
-        with open(
-                path,
-                "r",
-                encoding="utf-8"
-        ) as f:
-            return f.read()
 
     # 开始写初稿
     def start_write(self, task):
@@ -86,7 +77,6 @@ class CoordinatorAgent(BaseAgent):
     # 冲突修正阶段的结果处理
     def _handle_conflict_result(self, message):
         agent_name = message.sender
-
         if self.phase == "apply_solution":
             if agent_name in self.awaiting_agents_revisions:
                 self.awaiting_agents_revisions.remove(agent_name)
@@ -123,8 +113,8 @@ class CoordinatorAgent(BaseAgent):
             )
             self.check_round+=1
 
-            # 无冲突：进入Writer，或者最大轮次
-            if not conflict_list or self.check_round > self.max_check_round:
+            # 无冲突：进入Writer
+            if not conflict_list:
                 self.notify_writer()
                 return
 
@@ -232,3 +222,12 @@ class CoordinatorAgent(BaseAgent):
             writer,
             "所有正文已经完成协商和交叉审查，请进行最终整合。"
         )
+
+    # 加载prompt
+    def load_prompt(self, path):
+        with open(
+                path,
+                "r",
+                encoding="utf-8"
+        ) as f:
+            return f.read()

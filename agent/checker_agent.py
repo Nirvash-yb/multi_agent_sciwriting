@@ -65,7 +65,6 @@ class CheckerAgent(BaseAgent):
                     + "\n"
                 )
 
-        # 构造交叉审查Prompt
         prompt_template = self.load_prompt(
             "prompt/checker_prompt.txt"
         )
@@ -85,9 +84,6 @@ class CheckerAgent(BaseAgent):
 
     # 发送冲突通知
     def send_conflicts(self, conflicts):
-        if not conflicts:
-            return
-
         coordinator = self.agents.get("CoordinatorAgent")
         self.send_conflict(
             coordinator,

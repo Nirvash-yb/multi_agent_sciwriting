@@ -1,3 +1,4 @@
+import os
 from agent.coordinator_agent import CoordinatorAgent
 from agent.literature_agent import LiteratureAgent
 from agent.method_agent import MethodAgent
@@ -6,7 +7,6 @@ from agent.checker_agent import CheckerAgent
 from agent.writer_agent import WriterAgent
 from agent.baseagent import BaseAgent
 from communication.logger import CommunicationLogger
-import os
 from communication.communicationanalyzer import CommunicationAnalyzer
 from config import CONFIG
 
